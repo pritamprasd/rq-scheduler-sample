@@ -1,17 +1,44 @@
 version: '3.6'
 services:
+  # dashboard:
+  #   build: dashboard
+  #   command: rq-dashboard
+  #   ports:
+  #     - 9181:9181
+  #   depends_on:
+  #     - redis
+
+  monitor:
+    image: pranavgupta1234/rqmonitor
+    ports:
+      - 8899:8899
+    environment:
+      # RQ_MONITOR_REDIS_URL: 'redis://${HOST}:${PORT}/?password=${PASS}'
+      RQ_MONITOR_REDIS_URL: 'redis://${HOST}:${PORT}'
+
+
   tester:
     build: tester
+    command: python demo.py
     environment:
       REDIS_PORT: ${PORT}
       REDIS_HOST: ${HOST}
       REDIS_PASS: ${PASS}
     depends_on:
       - redis
+      - worker
+
+  worker:
+    build: tester
+    # command: rq worker --name woker_UNO  --with-scheduler --url 'redis://${HOST}:${PORT}/?password=${PASS}'
+    command: rq worker --name woker_UNO  --with-scheduler --url 'redis://${HOST}:${PORT}'
+    depends_on:
+      - redis
 
   redis:
     image: "redis:alpine"
-    command: redis-server --requirepass ${PASS}
+    command: redis-server
+    # command: redis-server --requirepass ${PASS}
     ports:
      - ${PORT}:6379
     volumes:
